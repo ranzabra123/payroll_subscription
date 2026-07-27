@@ -5,6 +5,7 @@ $_sidebarBg   = setting('sidebar_bg',   '#1e293b');
 $_sidebarText = setting('sidebar_text', '#94a3b8');
 $_accentColor = setting('accent_color', '#2563eb');
 $_topbarBg    = setting('topbar_bg',    '#ffffff');
+$_topbarText  = contrast_text_color($_topbarBg);
 $_logoUrl     = setting_logo_url();
 ?>
 <!DOCTYPE html>
@@ -13,7 +14,11 @@ $_logoUrl     = setting_logo_url();
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title><?= esc($title ?? 'Payroll') ?> – <?= esc($_companyName) ?></title>
-    <?php if ($_logoUrl): ?><link rel="icon" type="image/png" href="<?= esc($_logoUrl) ?>"><?php endif; ?>
+    <?php if ($_logoUrl): ?>
+    <link rel="icon" type="image/png" href="<?= esc($_logoUrl) ?>">
+    <?php else: ?>
+    <link rel="icon" type="image/svg+xml" href="<?= base_url('assets/img/default-favicon.svg') ?>">
+    <?php endif; ?>
     <link rel="stylesheet" href="<?= base_url('assets/css/bootstrap.min.css') ?>"/>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous"/>
     <link rel="stylesheet" href="<?= base_url('assets/css/custom.css') ?>"/>
@@ -23,12 +28,18 @@ $_logoUrl     = setting_logo_url();
             --sidebar-text:  <?= esc($_sidebarText) ?>;
             --accent-color:  <?= esc($_accentColor) ?>;
             --topbar-bg:     <?= esc($_topbarBg) ?>;
+            --topbar-text:   <?= esc($_topbarText) ?>;
         }
         #sidebar { background: var(--sidebar-bg) !important; }
         #sidebar .nav-link, #sidebar .nav-section, #sidebar .sidebar-footer { color: var(--sidebar-text) !important; }
         #sidebar .nav-link:hover, #sidebar .nav-link.active { background: var(--accent-color) !important; color: #fff !important; }
         #sidebar .sidebar-brand h4 { color: #fff !important; }
         #topbar { background: var(--topbar-bg) !important; }
+        /* Some theme presets use a dark topbar background — the topbar
+           title/user-badge text in custom.css is a hardcoded dark color,
+           so it needs an explicit override here or it becomes illegible
+           against a dark topbar. */
+        #topbar .topbar-title, #topbar .user-badge { color: var(--topbar-text) !important; }
         .btn-primary { background-color: var(--accent-color) !important; border-color: var(--accent-color) !important; }
         a { color: var(--accent-color); }
         .flash-container {

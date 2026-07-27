@@ -11,7 +11,7 @@ class UserModel extends Model
     protected $useAutoIncrement = true;
     protected $returnType    = 'array';
     protected $useSoftDeletes = true;
-    protected $allowedFields = ['username', 'password', 'full_name', 'role', 'branch_id', 'status', 'last_login'];
+    protected $allowedFields = ['username', 'password', 'full_name', 'role', 'branch_id', 'status', 'last_login', 'must_change_password'];
 
     protected $useTimestamps = true;
     protected $createdField  = 'created_at';
@@ -21,7 +21,7 @@ class UserModel extends Model
     protected $validationRules = [
         'username'  => 'required|min_length[3]|max_length[100]|is_unique[users.username,id,{id}]',
         'full_name' => 'required|min_length[3]|max_length[150]',
-        'role'      => 'required|in_list[admin,manager,staff]',
+        'role'      => 'required|in_list[admin,manager,staff,employee]',
         'status'    => 'required|in_list[active,inactive]',
     ];
 

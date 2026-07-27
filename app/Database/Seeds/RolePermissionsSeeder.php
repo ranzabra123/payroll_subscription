@@ -44,11 +44,9 @@ class RolePermissionsSeeder extends Seeder
             ],
         ];
 
-        $db = \Config\Database::connect();
-
         foreach ($defaults as $role => $modules) {
             foreach ($modules as $module => [$view, $add, $edit, $delete]) {
-                $db->table('role_permissions')->replace([
+                $this->db->table('role_permissions')->replace([
                     'role'       => $role,
                     'module'     => $module,
                     'can_view'   => $view,

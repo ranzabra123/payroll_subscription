@@ -2,9 +2,15 @@
 <?= $this->section('content') ?>
 
 <?php
-$_companyName = setting('company_name', 'PayrollPH');
-$_tagline = setting('company_tagline', 'Payroll Management System');
-$_logoUrl = setting_logo_url();
+// NOTE: this page renders before a tenant/company is known, so it must
+// never call setting()/setting_logo_url() — those read from whatever
+// tenant DB happens to be connected, which would leak another company's
+// branding onto the shared login page. platform_setting()/
+// platform_logo_url() read from the landlord DB instead, which is
+// always available and the same for every visitor here, so they're
+// safe to use.
+$_companyName = platform_setting('site_title', 'SOMAR Payroll Management System');
+$_logoUrl = platform_logo_url();
 ?>
 
 <div class="login-card">
@@ -20,13 +26,22 @@ $_logoUrl = setting_logo_url();
             <?php endif; ?>
             <div>
                 <h3 class="fw-bold mb-0"><?= esc($_companyName) ?></h3>
-                <p class="mb-0 opacity-75 small"><?= esc($_tagline) ?></p>
             </div>
         </div>
     </div>
     <div class="login-body">
         <form action="<?= site_url('login') ?>" method="POST">
             <?= csrf_field() ?>
+            <div class="mb-3">
+                <label class="form-label" for="company_code">
+                    <i class="fa fa-building text-muted me-1"></i>Company Code
+                </label>
+                <input type="text" name="company_code" id="company_code"
+                       class="form-control"
+                       value="<?= old('company_code') ?>"
+                       placeholder="Enter your company code"
+                       required autofocus/>
+            </div>
             <div class="mb-3">
                 <label class="form-label" for="username">
                     <i class="fa fa-user text-muted me-1"></i>Username
@@ -35,7 +50,7 @@ $_logoUrl = setting_logo_url();
                        class="form-control"
                        value="<?= old('username') ?>"
                        placeholder="Enter username"
-                       required autofocus/>
+                       required/>
             </div>
             <div class="mb-4">
                 <label class="form-label" for="password">

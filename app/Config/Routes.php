@@ -15,12 +15,54 @@ $routes->post('login', 'Auth::attemptLogin');
 $routes->get('logout', 'Auth::logout');
 
 // ---------------------------------------------------------------
+// Superadmin – fully separate auth stack from tenant routes above
+// ---------------------------------------------------------------
+$routes->group('superadmin', static function ($routes) {
+    $routes->get('login', 'Superadmin\AuthController::login');
+    $routes->post('login', 'Superadmin\AuthController::attemptLogin');
+    $routes->get('logout', 'Superadmin\AuthController::logout');
+
+    $routes->group('', ['filter' => 'superadminauth'], static function ($routes) {
+        $routes->get('/', 'Superadmin\DashboardController::index');
+        $routes->get('companies', 'Superadmin\CompaniesController::index');
+        $routes->get('companies/create', 'Superadmin\CompaniesController::create');
+        $routes->post('companies/store', 'Superadmin\CompaniesController::store');
+        $routes->get('companies/view/(:num)', 'Superadmin\CompaniesController::view/$1');
+        $routes->post('companies/status/(:num)', 'Superadmin\CompaniesController::updateStatus/$1');
+        $routes->post('companies/expiry/(:num)', 'Superadmin\CompaniesController::updateExpiry/$1');
+        $routes->post('companies/plan/(:num)', 'Superadmin\CompaniesController::updatePlan/$1');
+        $routes->post('companies/reset-credentials/(:num)', 'Superadmin\CompaniesController::resetCredentials/$1');
+
+        // ---- Superadmin accounts ----
+        $routes->get('admins',                'Superadmin\SuperadminsController::index');
+        $routes->get('admins/create',         'Superadmin\SuperadminsController::create');
+        $routes->post('admins/store',         'Superadmin\SuperadminsController::store');
+        $routes->get('admins/edit/(:num)',    'Superadmin\SuperadminsController::edit/$1');
+        $routes->post('admins/update/(:num)', 'Superadmin\SuperadminsController::update/$1');
+        $routes->get('admins/delete/(:num)',  'Superadmin\SuperadminsController::delete/$1');
+
+        // ---- Platform-wide branding (logo/title, shown before login) ----
+        $routes->get('settings',              'Superadmin\PlatformSettingsController::index');
+        $routes->post('settings/general',     'Superadmin\PlatformSettingsController::saveGeneral');
+        $routes->post('settings/logo',        'Superadmin\PlatformSettingsController::uploadLogo');
+        $routes->get('settings/logo/remove',  'Superadmin\PlatformSettingsController::removeLogo');
+    });
+});
+
+// ---------------------------------------------------------------
 // Protected routes – require authentication
 // ---------------------------------------------------------------
-$routes->group('', ['filter' => 'auth'], static function ($routes) {
+$routes->group('', ['filter' => ['auth', 'forcepasswordchange']], static function ($routes) {
 
     // Dashboard
     $routes->get('dashboard', 'Dashboard::index');
+
+    // ---- Subscription gate (reachable even when a company is blocked) ----
+    $routes->get('subscription/expired', 'SubscriptionController::expired');
+
+    // ---- Forced password change (reachable even when otherwise blocked) ----
+    $routes->get('change-password',  'ChangePasswordController::index');
+    $routes->post('change-password', 'ChangePasswordController::update');
 
     // ---- Users (admin only) ----
     $routes->get('users',                   'UsersController::index');

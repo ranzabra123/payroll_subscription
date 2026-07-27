@@ -77,3 +77,32 @@ defined('EXIT_USER_INPUT')     || define('EXIT_USER_INPUT', 7);     // invalid u
 defined('EXIT_DATABASE')       || define('EXIT_DATABASE', 8);       // database error
 defined('EXIT__AUTO_MIN')      || define('EXIT__AUTO_MIN', 9);      // lowest automatically-assigned error code
 defined('EXIT__AUTO_MAX')      || define('EXIT__AUTO_MAX', 125);    // highest automatically-assigned error code
+
+defined('DYNAMIC_BASE_URL') || define(
+    'DYNAMIC_BASE_URL',
+    (function () {
+        $host = $_SERVER['HTTP_HOST'] ?? 'localhost:8090';
+
+        $proto = 'http';
+        if (
+            (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ||
+            (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https')
+        ) {
+            $proto = 'https';
+        }
+
+        // When this app is deployed in a subfolder (e.g. XAMPP's shared
+        // htdocs/payroll, reached as http://localhost/payroll/, rewritten
+        // to this project's root index.php rather than a vhost/document
+        // root pointed straight at it), SCRIPT_NAME carries that prefix
+        // (e.g. "/payroll/index.php"). Derive it so base_url() links
+        // (CSS/JS/images/form actions) resolve correctly either way —
+        // vhost/port deployments with an empty prefix keep working too.
+        $scriptDir = isset($_SERVER['SCRIPT_NAME'])
+            ? str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME']))
+            : '';
+        $basePath = in_array($scriptDir, ['', '/', '.'], true) ? '' : rtrim($scriptDir, '/');
+
+        return $proto . '://' . $host . $basePath . '/';
+    })()
+);

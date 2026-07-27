@@ -1,6 +1,26 @@
 <?= $this->extend('layouts/main') ?>
 <?= $this->section('content') ?>
 
+<style>
+.theme-preset-btn {
+    border: 1px solid #e2e8f0;
+    border-radius: .5rem;
+    background: #fff;
+    padding: .5rem .6rem;
+    cursor: pointer;
+    transition: border-color .15s, box-shadow .15s;
+}
+.theme-preset-btn:hover { border-color: #94a3b8; }
+.theme-preset-btn.active { border-color: #2563eb; box-shadow: 0 0 0 2px rgba(37,99,235,.15); }
+.theme-preset-swatch {
+    width: 18px;
+    height: 18px;
+    border-radius: 4px;
+    display: inline-block;
+    margin-right: 3px;
+}
+</style>
+
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h5 class="mb-0 fw-semibold"><i class="fa fa-sliders me-2 text-primary"></i>Control Panel</h5>
     <span class="badge bg-danger"><i class="fa fa-shield-halved me-1"></i>Administrator Only</span>
@@ -375,6 +395,42 @@
             <div class="card-body">
                 <form action="<?= site_url('settings/colors') ?>" method="POST" id="colorForm">
                     <?= csrf_field() ?>
+
+                    <label class="form-label fw-medium">Preset Themes</label>
+                    <p class="text-muted small mb-2">Pick a starting point, then fine-tune any color below if you like.</p>
+                    <div class="row row-cols-2 row-cols-md-5 g-2 mb-4">
+                        <?php
+                        $_themePresets = [
+                            ['name' => 'Professional Blue',       'sidebar_bg' => '#1E3A8A', 'sidebar_text' => '#F8FAFC', 'accent_color' => '#3B82F6', 'topbar_bg' => '#FFFFFF'],
+                            ['name' => 'Dark Navy',                'sidebar_bg' => '#0F172A', 'sidebar_text' => '#E2E8F0', 'accent_color' => '#38BDF8', 'topbar_bg' => '#1E293B'],
+                            ['name' => 'Emerald Business',         'sidebar_bg' => '#064E3B', 'sidebar_text' => '#ECFDF5', 'accent_color' => '#10B981', 'topbar_bg' => '#FFFFFF'],
+                            ['name' => 'Modern Gray',              'sidebar_bg' => '#374151', 'sidebar_text' => '#F9FAFB', 'accent_color' => '#6366F1', 'topbar_bg' => '#FFFFFF'],
+                            ['name' => 'Corporate Purple',         'sidebar_bg' => '#312E81', 'sidebar_text' => '#EEF2FF', 'accent_color' => '#8B5CF6', 'topbar_bg' => '#FFFFFF'],
+                            ['name' => 'Teal Professional',        'sidebar_bg' => '#134E4A', 'sidebar_text' => '#F0FDFA', 'accent_color' => '#14B8A6', 'topbar_bg' => '#FFFFFF'],
+                            ['name' => 'Coffee Brown (Restaurant)','sidebar_bg' => '#3E2723', 'sidebar_text' => '#FFF8E1', 'accent_color' => '#C67C4E', 'topbar_bg' => '#FFFDF8'],
+                            ['name' => 'Charcoal Orange',          'sidebar_bg' => '#1F2937', 'sidebar_text' => '#F3F4F6', 'accent_color' => '#F97316', 'topbar_bg' => '#FFFFFF'],
+                            ['name' => 'Indigo Premium',           'sidebar_bg' => '#312E81', 'sidebar_text' => '#F5F3FF', 'accent_color' => '#4F46E5', 'topbar_bg' => '#EEF2FF'],
+                            // Values not specified by name alone — filled in to match
+                            // the "black + gold" premium-ERP look the other 9 establish.
+                            ['name' => 'Black Gold (Premium ERP)', 'sidebar_bg' => '#000000', 'sidebar_text' => '#E5E5E5', 'accent_color' => '#D4AF37', 'topbar_bg' => '#1A1A1A'],
+                        ];
+                        ?>
+                        <?php foreach ($_themePresets as $_preset): ?>
+                        <div class="col">
+                            <button type="button" class="theme-preset-btn w-100"
+                                    onclick="applyThemePreset('<?= esc($_preset['sidebar_bg'], 'js') ?>','<?= esc($_preset['sidebar_text'], 'js') ?>','<?= esc($_preset['accent_color'], 'js') ?>','<?= esc($_preset['topbar_bg'], 'js') ?>', this)">
+                                <div class="d-flex mb-2">
+                                    <span class="theme-preset-swatch" style="background:<?= esc($_preset['sidebar_bg']) ?>;"></span>
+                                    <span class="theme-preset-swatch" style="background:<?= esc($_preset['sidebar_text']) ?>;"></span>
+                                    <span class="theme-preset-swatch" style="background:<?= esc($_preset['accent_color']) ?>;"></span>
+                                    <span class="theme-preset-swatch" style="background:<?= esc($_preset['topbar_bg']) ?>;border:1px solid #e2e8f0;"></span>
+                                </div>
+                                <div class="small text-start"><?= esc($_preset['name']) ?></div>
+                            </button>
+                        </div>
+                        <?php endforeach; ?>
+                    </div>
+
                     <div class="row g-4">
 
                         <div class="col-md-3 col-6">
@@ -449,13 +505,13 @@
                                 <?php endforeach; ?>
                             </div>
                             <div class="flex-grow-1">
-                                <div id="previewTopbar" class="px-3 d-flex align-items-center" style="height:48px;background:#fff;border-bottom:1px solid #e2e8f0;">
-                                    <span class="small text-muted">Dashboard</span>
+                                <div id="previewTopbar" class="px-3 d-flex align-items-center" style="height:48px;background:<?= esc($cfg['topbar_bg'] ?? '#ffffff') ?>;border-bottom:1px solid #e2e8f0;">
+                                    <span id="previewTopbarText" class="small" style="color:<?= esc(contrast_text_color($cfg['topbar_bg'] ?? '#ffffff')) ?>;">Dashboard</span>
                                 </div>
                                 <div class="p-3" style="background:#f8fafc;">
                                     <div class="rounded mb-2" style="height:12px;width:80%;background:#e2e8f0;"></div>
                                     <div class="rounded mb-2" style="height:12px;width:60%;background:#e2e8f0;"></div>
-                                    <div class="rounded" style="height:28px;width:100px;background:#2563eb;"></div>
+                                    <div id="previewAccentBtn" class="rounded" style="height:28px;width:100px;background:#2563eb;"></div>
                                 </div>
                             </div>
                         </div>
@@ -581,6 +637,9 @@ document.addEventListener('DOMContentLoaded', function () {
         const tab = document.querySelector('[href="' + hash + '"]');
         if (tab) bootstrap.Tab.getOrCreateInstance(tab).show();
     }
+    // Sync the live preview to the actual saved colors on load — the
+    // preview markup otherwise starts from hardcoded placeholder colors.
+    updatePreview();
 });
 
 // ---- Logo preview ----
@@ -619,9 +678,44 @@ function updatePreview() {
     document.getElementById('previewSidebar').style.background = sidebarBg;
     document.querySelectorAll('#previewLink').forEach(el => el.style.color = sidebarText);
     document.getElementById('previewTopbar').style.background = topbarBg;
-    // Update the accent button in preview
-    const btn = document.querySelector('#previewPanel .rounded[style*="background:#2563eb"]');
-    if (btn) btn.style.background = accentColor;
+    document.getElementById('previewTopbarText').style.color = contrastTextColor(topbarBg);
+    document.getElementById('previewAccentBtn').style.background = accentColor;
+}
+
+// Mirrors contrast_text_color() in app/Helpers/settings_helper.php — some
+// theme presets use a dark topbar, and the topbar title/date text needs
+// to flip to a light color to stay readable against it.
+function contrastTextColor(hex) {
+    hex = hex.replace('#', '');
+    if (hex.length === 3) {
+        hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
+    }
+    if (!/^[0-9a-fA-F]{6}$/.test(hex)) {
+        return '#1e293b';
+    }
+    const r = parseInt(hex.substring(0, 2), 16);
+    const g = parseInt(hex.substring(2, 4), 16);
+    const b = parseInt(hex.substring(4, 6), 16);
+    const brightness = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    return brightness > 0.55 ? '#1e293b' : '#f8fafc';
+}
+
+// ---- Preset themes ----
+function applyThemePreset(sidebarBg, sidebarText, accentColor, topbarBg, btnEl) {
+    setColor('sidebar_bg', sidebarBg);
+    setColor('sidebar_text', sidebarText);
+    setColor('accent_color', accentColor);
+    setColor('topbar_bg', topbarBg);
+    updatePreview();
+
+    document.querySelectorAll('.theme-preset-btn').forEach(b => b.classList.remove('active'));
+    btnEl.classList.add('active');
+}
+
+function setColor(id, val) {
+    document.getElementById(id).value = val;
+    const hexEl = document.getElementById(id + '_hex');
+    if (hexEl) hexEl.value = val;
 }
 
 // ---- Reset to defaults ----
@@ -633,10 +727,9 @@ function resetColors() {
         topbar_bg:    '#ffffff',
     };
     Object.entries(defaults).forEach(function([id, val]) {
-        document.getElementById(id).value = val;
-        const hexEl = document.getElementById(id + '_hex');
-        if (hexEl) hexEl.value = val;
+        setColor(id, val);
     });
+    document.querySelectorAll('.theme-preset-btn').forEach(b => b.classList.remove('active'));
     updatePreview();
 }
 

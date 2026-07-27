@@ -115,23 +115,46 @@ class SettingsController extends Controller
             }
         }
 
-        // Move to the public assets upload folder.
-        $uploadDir = FCPATH . 'assets/uploads/';
-        if (! is_dir($uploadDir) && is_dir(FCPATH . 'public/assets')) {
-            $uploadDir = FCPATH . 'public/assets/uploads/';
-        }
-        if (! is_dir($uploadDir)) {
-            mkdir($uploadDir, 0755, true);
-        }
+        // Move to a per-company subfolder of the assets upload directory —
+        // without this, uploads from different tenants would share one
+        // folder and could collide/overwrite each other's logos.
+        [$uploadDir, $relativePrefix] = $this->tenantUploadDir();
 
         $newName = 'logo_' . time() . '.' . $file->getExtension();
         $file->move($uploadDir, $newName);
 
-        $relativePath = 'assets/uploads/' . $newName;
+        $relativePath = $relativePrefix . $newName;
         $this->settings->setValue('logo_path', $relativePath);
         $this->audit->logAction('Settings', 'upload_logo', null, null, null, 'Uploaded company logo');
 
         return redirect()->to(site_url('settings'))->with('success', 'Logo updated successfully.');
+    }
+
+    /**
+     * Resolves the per-company upload directory for the current tenant,
+     * creating it if needed.
+     *
+     * @return array{0: string, 1: string} [physical directory to write files into, relative path prefix to store in settings]
+     */
+    private function tenantUploadDir(): array
+    {
+        $base = FCPATH . 'assets/uploads/';
+        if (! is_dir(FCPATH . 'assets/uploads') && is_dir(FCPATH . 'public/assets')) {
+            $base = FCPATH . 'public/assets/uploads/';
+        }
+
+        // session()->get('company_slug') already comes from a validated
+        // landlord DB row, but re-sanitize defensively since it ends up
+        // in a filesystem path.
+        $slug = preg_replace('/[^a-z0-9_]/', '', strtolower((string) session()->get('company_slug')));
+        $slug = $slug !== '' ? $slug : 'unknown';
+
+        $dir = $base . $slug . '/';
+        if (! is_dir($dir)) {
+            mkdir($dir, 0755, true);
+        }
+
+        return [$dir, 'assets/uploads/' . $slug . '/'];
     }
 
     /** Remove the current logo. */

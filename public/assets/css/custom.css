@@ -41,8 +41,8 @@ body {
 
 #sidebar .sidebar-brand {
     padding: 1.2rem 1.5rem;
-    border-bottom: 1px solid #334155;
-    background: #0f172a;
+    border-bottom: 1px solid rgba(255, 255, 255, .08);
+    background: var(--sidebar-bg);
 }
 
 #sidebar .sidebar-brand h4 {

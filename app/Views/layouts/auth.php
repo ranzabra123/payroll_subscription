@@ -3,10 +3,23 @@
 <head>
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <?php $_companyName = setting('company_name', 'PayrollPH'); 
-          $_logoUrl = setting_logo_url(); ?>
-    <title><?= esc($title ?? 'Login') ?> – <?= esc($_companyName) ?></title>
-    <?php if ($_logoUrl): ?><link rel="icon" type="image/png" href="<?= esc($_logoUrl) ?>"><?php endif; ?>
+    <?php
+    // This layout renders before a tenant/company is known (shared login
+    // page), so it must never call setting()/setting_logo_url() — those
+    // read from whatever tenant DB happens to be connected, which would
+    // leak another company's branding onto the shared login page.
+    // platform_setting()/platform_logo_url() are different: they read
+    // from the landlord DB, which is always available regardless of
+    // tenant resolution, so they're safe to use here.
+    $_platformTitle = platform_setting('site_title', 'SOMAR Payroll Management System');
+    $_platformLogo  = platform_logo_url();
+    ?>
+    <title><?= esc($title ?? 'Login') ?> – <?= esc($_platformTitle) ?></title>
+    <?php if ($_platformLogo): ?>
+    <link rel="icon" type="image/png" href="<?= esc($_platformLogo) ?>">
+    <?php else: ?>
+    <link rel="icon" type="image/svg+xml" href="<?= base_url('assets/img/default-favicon.svg') ?>">
+    <?php endif; ?>
     <link rel="stylesheet" href="<?= base_url('assets/css/bootstrap.min.css') ?>"/>
     <link rel="stylesheet" href="<?= base_url('assets/css/all.min.css') ?>"/>
     <link rel="stylesheet" href="<?= base_url('assets/css/custom.css') ?>"/>

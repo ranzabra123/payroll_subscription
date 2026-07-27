@@ -5,6 +5,11 @@ env
 # Composer
 vendor/
 composer.lock
+composer.phar
+
+# PHPUnit
+build/
+.phpunit.cache/
 
 # Writable directories (logs, cache, sessions, uploads)
 writable/logs/*
@@ -26,3 +31,6 @@ Thumbs.db
 .idea/
 .vscode/
 *.swp
+
+# Syncthing
+.stfolder/
