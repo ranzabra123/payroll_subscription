@@ -4,9 +4,16 @@
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h5 class="mb-0 fw-semibold">Employees <?php if ($search): ?><span class="text-muted small">– "<?= esc($search) ?>"</span><?php endif; ?></h5>
     <?php if (can_do('employees', 'add')): ?>
-    <a href="<?= site_url('employees/create') ?>" class="btn btn-primary btn-sm">
-        <i class="fa fa-user-plus me-1"></i>Add Employee
-    </a>
+        <?php if ($reached): ?>
+        <button type="button" class="btn btn-primary btn-sm" disabled
+                title="<?= esc($planLabel) ?> plan limit of <?= (int) $max ?> employees reached. Upgrade your plan to add more.">
+            <i class="fa fa-user-plus me-1"></i>Add Employee
+        </button>
+        <?php else: ?>
+        <a href="<?= site_url('employees/create') ?>" class="btn btn-primary btn-sm">
+            <i class="fa fa-user-plus me-1"></i>Add Employee
+        </a>
+        <?php endif; ?>
     <?php endif; ?>
 </div>
 

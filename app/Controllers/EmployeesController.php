@@ -24,6 +24,21 @@ class EmployeesController extends Controller
         $this->audit = new AuditLogModel();
     }
 
+    /** Current plan's employee cap vs. live count, for gating the "Add Employee" UI. */
+    private function employeeLimitStatus(): array
+    {
+        $plan = session()->get('subscription_plan');
+        $max  = SubscriptionPlans::maxEmployees($plan);
+        $count = $this->model->countAllResults();
+
+        return [
+            'max'      => $max,
+            'count'    => $count,
+            'reached'  => $max !== null && $count >= $max,
+            'planLabel' => SubscriptionPlans::label($plan),
+        ];
+    }
+
     public function index()
     {
         $search   = $this->request->getGet('q');
@@ -45,25 +60,25 @@ class EmployeesController extends Controller
 
         $branches = (new \App\Models\BranchModel())->getActiveList();
 
-        return view('employees/index', [
+        return view('employees/index', array_merge([
             'title'       => 'Employees',
             'employees'   => $employees,
             'search'      => $search,
             'branches'    => $branches,
             'branchId'    => $branchId,
             'userBranch'  => $userBranch,
-        ]);
+        ], $this->employeeLimitStatus()));
     }
 
     public function create()
     {
         $userBranch = user_branch_id();
-        return view('employees/create', [
+        return view('employees/create', array_merge([
             'title'       => 'Add Employee',
             'departments' => (new \App\Models\DepartmentModel())->getActiveList(),
             'branches'    => (new \App\Models\BranchModel())->getActiveList(),
             'userBranch'  => $userBranch,
-        ]);
+        ], $this->employeeLimitStatus()));
     }
 
     public function store()

@@ -299,6 +299,13 @@
                 <div class="card">
                     <div class="card-header fw-semibold"><i class="fa fa-plus me-2"></i>Add Branch</div>
                     <div class="card-body">
+                        <?php if ($branchLimitReached): ?>
+                        <div class="alert alert-warning">
+                            <i class="fa fa-triangle-exclamation me-2"></i>
+                            You've reached the <?= esc($planLabel) ?> plan limit of <?= (int) $maxBranches ?> branch<?= $maxBranches === 1 ? '' : 'es' ?>. Upgrade your plan to add more.
+                        </div>
+                        <?php endif; ?>
+                        <fieldset <?= $branchLimitReached ? 'disabled' : '' ?>>
                         <form action="<?= site_url('settings/branch/add') ?>" method="POST">
                             <?= csrf_field() ?>
                             <div class="mb-3">
@@ -313,6 +320,7 @@
                                 <i class="fa fa-plus me-1"></i>Add Branch
                             </button>
                         </form>
+                        </fieldset>
                     </div>
                 </div>
             </div>

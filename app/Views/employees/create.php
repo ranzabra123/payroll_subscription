@@ -8,8 +8,16 @@
     <h5 class="mb-0 fw-semibold">Add New Employee</h5>
 </div>
 
+<?php if ($reached): ?>
+<div class="alert alert-warning" style="max-width:700px;">
+    <i class="fa fa-triangle-exclamation me-2"></i>
+    You've reached the <?= esc($planLabel) ?> plan limit of <?= (int) $max ?> employees. Upgrade your plan to add more.
+</div>
+<?php endif; ?>
+
 <div class="card" style="max-width:700px;">
     <div class="card-body">
+        <fieldset <?= $reached ? 'disabled' : '' ?>>
         <form action="<?= site_url('employees/store') ?>" method="POST" novalidate>
             <?= csrf_field() ?>
 
@@ -156,6 +164,7 @@
                 <a href="<?= site_url('employees') ?>" class="btn btn-light">Cancel</a>
             </div>
         </form>
+        </fieldset>
     </div>
 </div>
 

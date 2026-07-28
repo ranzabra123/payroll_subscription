@@ -34,6 +34,11 @@ class SettingsController extends Controller
     public function index()
     {
         $permModel = new RolePermissionModel();
+
+        $plan       = session()->get('subscription_plan');
+        $maxBranches = SubscriptionPlans::maxBranches($plan);
+        $branchCount = $this->branchModel->countAllResults();
+
         return view('settings/index', [
             'title'          => 'Control Panel',
             'cfg'            => $this->settings->getAllKeyed(),
@@ -43,6 +48,9 @@ class SettingsController extends Controller
             'managerPerms'   => $permModel->getForRole('manager'),
             'staffPerms'     => $permModel->getForRole('staff'),
             'employeePerms'  => $permModel->getForRole('employee'),
+            'maxBranches'    => $maxBranches,
+            'branchLimitReached' => $maxBranches !== null && $branchCount >= $maxBranches,
+            'planLabel'      => SubscriptionPlans::label($plan),
         ]);
     }
 
