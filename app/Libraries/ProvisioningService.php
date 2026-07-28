@@ -51,7 +51,7 @@ class ProvisioningService
             throw new ProvisioningException("Company code '{$slug}' is already taken.");
         }
 
-        $dbName = 'payroll_' . $slug;
+        $dbName = config(Database::class)->tenantDbPrefix . $slug;
 
         if (strlen($dbName) > 64) {
             throw new ProvisioningException('Company code is too long.');
@@ -63,10 +63,32 @@ class ProvisioningService
         $landlordDbConfig = config(Database::class)->landlord;
         $landlordConn     = db_connect('landlord');
 
+        // Some hosts (typical cPanel shared hosting) never grant the
+        // app's own DB user CREATE DATABASE — only the control panel
+        // can create new databases there. If that's the case, fall back
+        // to expecting the superadmin has already created `$dbName`
+        // manually (e.g. cPanel > MySQL Databases) and granted this DB
+        // user full privileges on it, and proceed using that instead of
+        // hard-failing. We only track/drop the database on later
+        // failure if *this request* is the one that created it — a
+        // manually pre-created database is never auto-deleted.
+        $weCreatedDatabase = false;
+
         try {
             $landlordConn->query('CREATE DATABASE `' . $dbName . '` CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci');
+            $weCreatedDatabase = true;
         } catch (Throwable $e) {
-            throw new ProvisioningException('Failed to create the tenant database: ' . $e->getMessage());
+            if (! $this->databaseExists($landlordConn, $dbName)) {
+                throw new ProvisioningException(
+                    "Could not create the tenant database automatically ({$e->getMessage()}). "
+                    . "If your hosting doesn't allow this, create a database named '{$dbName}' "
+                    . 'manually first (e.g. cPanel > MySQL Databases), grant this app\'s database '
+                    . 'user full privileges on it, then submit this form again with the same company code.',
+                );
+            }
+            // else: database already exists and this DB user can see it
+            // (i.e. was pre-created + granted) — proceed as if we'd just
+            // created it.
         }
 
         try {
@@ -127,7 +149,9 @@ class ProvisioningService
                 ['setting_key' => 'topbar_bg', 'setting_value' => '#ffffff', 'created_at' => $now, 'updated_at' => $now],
             ]);
         } catch (Throwable $e) {
-            $this->dropDatabase($landlordConn, $dbName);
+            if ($weCreatedDatabase) {
+                $this->dropDatabase($landlordConn, $dbName);
+            }
 
             throw $e instanceof ProvisioningException
                 ? $e
@@ -150,7 +174,9 @@ class ProvisioningService
         ]);
 
         if (! $companyId) {
-            $this->dropDatabase($landlordConn, $dbName);
+            if ($weCreatedDatabase) {
+                $this->dropDatabase($landlordConn, $dbName);
+            }
             $errors = implode(' ', $companyModel->errors() ?: ['Unknown validation error.']);
             throw new ProvisioningException("Could not save the company record: {$errors}");
         }
@@ -164,6 +190,25 @@ class ProvisioningService
             $landlordConn->query('DROP DATABASE IF EXISTS `' . $dbName . '`');
         } catch (Throwable) {
             // Best-effort cleanup only — the original exception is what surfaces.
+        }
+    }
+
+    /**
+     * Whether $dbName exists and is visible to the connecting DB user
+     * (MySQL only lists schemas the user has some privilege on, which is
+     * exactly what we need here: "does it exist AND can we use it").
+     */
+    private function databaseExists($landlordConn, string $dbName): bool
+    {
+        try {
+            $result = $landlordConn->query(
+                'SELECT SCHEMA_NAME FROM information_schema.SCHEMATA WHERE SCHEMA_NAME = ?',
+                [$dbName],
+            );
+
+            return $result !== false && $result->getNumRows() > 0;
+        } catch (Throwable) {
+            return false;
         }
     }
 }

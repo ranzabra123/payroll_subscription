@@ -20,6 +20,15 @@ class Database extends Config
     public string $defaultGroup = 'default';
 
     /**
+     * Prefix prepended to every new tenant database name, e.g.
+     * "payroll_" -> payroll_<slug>. Override per-environment via .env
+     * (database.tenantDbPrefix) — some hosts (e.g. cPanel) require every
+     * database to start with the account's own prefix, which this
+     * project's local dev environment doesn't need.
+     */
+    public string $tenantDbPrefix = 'payroll_';
+
+    /**
      * The default database connection.
      *
      * @var array<string, mixed>

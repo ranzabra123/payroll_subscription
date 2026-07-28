@@ -19,14 +19,28 @@
                        value="<?= old('name') ?>" required/>
             </div>
 
+            <?php $_dbPrefix = config(\Config\Database::class)->tenantDbPrefix; ?>
             <div class="mb-3">
                 <label class="form-label">Company Code <span class="text-danger">*</span></label>
                 <input type="text" name="slug" id="company_slug" class="form-control font-monospace"
-                       value="<?= old('slug') ?>" pattern="[a-z0-9_]{2,40}" required/>
+                       value="<?= old('slug') ?>" pattern="[a-z0-9_]{2,40}" required
+                       oninput="updateDbNamePreview()"/>
                 <div class="form-text">
                     Lowercase letters, numbers, underscores only. This is what the company
-                    types on the login page, and becomes database <code>payroll_&lt;code&gt;</code>.
+                    types on the login page, and becomes database
+                    <code id="db_name_preview"><?= esc($_dbPrefix) ?>&lt;code&gt;</code>.
                 </div>
+            </div>
+
+            <div class="alert alert-info small mb-3">
+                <i class="fa fa-circle-info me-1"></i>
+                <strong>If provisioning fails with a database-access error</strong> (common on
+                shared/cPanel hosting that doesn't allow the app to create databases itself):
+                create the database above manually first — cPanel &rarr; MySQL Databases &rarr;
+                create <code id="db_name_hint_2"><?= esc($_dbPrefix) ?>&lt;code&gt;</code>, then
+                add your app's database user to it with <strong>All Privileges</strong> — then
+                submit this form again with the same company code. The app will detect the
+                database already exists and continue from there instead of trying to create it.
             </div>
 
             <hr class="my-4"/>
@@ -101,10 +115,20 @@ document.getElementById('company_name').addEventListener('input', function () {
     const slugField = document.getElementById('company_slug');
     if (slugField.dataset.touched) return;
     slugField.value = this.value.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '').slice(0, 40);
+    updateDbNamePreview();
 });
 document.getElementById('company_slug').addEventListener('input', function () {
     this.dataset.touched = '1';
 });
+
+const DB_PREFIX = <?= json_encode($_dbPrefix) ?>;
+function updateDbNamePreview() {
+    const code = document.getElementById('company_slug').value || '<code>';
+    const label = DB_PREFIX + code;
+    document.getElementById('db_name_preview').textContent = label;
+    document.getElementById('db_name_hint_2').textContent = label;
+}
+updateDbNamePreview();
 
 function generateTempPassword() {
     // Excludes visually ambiguous characters (0/O, 1/l/I) since this is

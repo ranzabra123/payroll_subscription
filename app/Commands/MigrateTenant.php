@@ -15,7 +15,8 @@ use Config\Migrations as MigrationsConfig;
  * brought up to date after a schema change (e.g. a migration added after
  * that tenant was originally provisioned).
  *
- * Usage: php spark migrate:tenant payroll_<slug>
+ * Usage: php spark migrate:tenant <db_name> (e.g. <tenantDbPrefix><slug>,
+ * see Config\Database::$tenantDbPrefix)
  */
 class MigrateTenant extends BaseCommand
 {
