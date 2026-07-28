@@ -70,6 +70,36 @@
             </div>
         </div>
     </div>
+
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header fw-semibold"><i class="fa fa-life-ring me-2"></i>Onboarding Tour Links</div>
+            <div class="card-body">
+                <p class="text-muted small">
+                    Shown on the completion screen of every tenant's interactive
+                    product tour. Leave blank to hide a link rather than point it
+                    somewhere unfinished.
+                </p>
+                <form action="<?= site_url('superadmin/settings/support') ?>" method="POST">
+                    <?= csrf_field() ?>
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">Documentation URL</label>
+                        <input type="text" name="docs_url" class="form-control"
+                               value="<?= esc($cfg['docs_url'] ?? '') ?>" placeholder="https://docs.example.com"/>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">Contact Support Link</label>
+                        <input type="text" name="support_url" class="form-control"
+                               value="<?= esc($cfg['support_url'] ?? '') ?>" placeholder="mailto:support@example.com"/>
+                        <div class="form-text">Any link works — mailto:, tel:, or a URL.</div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fa fa-save me-1"></i>Save
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
 </div>
 
 <?= $this->endSection() ?>

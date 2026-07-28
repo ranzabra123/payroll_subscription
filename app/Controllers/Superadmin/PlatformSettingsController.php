@@ -43,6 +43,23 @@ class PlatformSettingsController extends Controller
         return redirect()->to(site_url('superadmin/settings'))->with('success', 'Platform settings saved.');
     }
 
+    /**
+     * Save the "Documentation" and "Contact Support" links shown on the
+     * tenant onboarding tour's completion screen. Both optional — left
+     * blank, the corresponding link is simply hidden there rather than
+     * pointing somewhere fabricated.
+     */
+    public function saveSupportLinks()
+    {
+        $docsUrl    = trim((string) $this->request->getPost('docs_url'));
+        $supportUrl = trim((string) $this->request->getPost('support_url'));
+
+        $this->settings->setValue('docs_url', $docsUrl !== '' ? $docsUrl : null);
+        $this->settings->setValue('support_url', $supportUrl !== '' ? $supportUrl : null);
+
+        return redirect()->to(site_url('superadmin/settings'))->with('success', 'Support links saved.');
+    }
+
     /** Upload / replace the platform logo (used as favicon). */
     public function uploadLogo()
     {

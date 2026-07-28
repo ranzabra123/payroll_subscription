@@ -46,6 +46,7 @@ $routes->group('superadmin', static function ($routes) {
         $routes->post('settings/general',     'Superadmin\PlatformSettingsController::saveGeneral');
         $routes->post('settings/logo',        'Superadmin\PlatformSettingsController::uploadLogo');
         $routes->get('settings/logo/remove',  'Superadmin\PlatformSettingsController::removeLogo');
+        $routes->post('settings/support',     'Superadmin\PlatformSettingsController::saveSupportLinks');
     });
 });
 

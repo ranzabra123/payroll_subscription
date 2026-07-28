@@ -22,6 +22,7 @@ $_logoUrl     = setting_logo_url();
     <link rel="stylesheet" href="<?= base_url('assets/css/bootstrap.min.css') ?>"/>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous"/>
     <link rel="stylesheet" href="<?= base_url('assets/css/custom.css') ?>"/>
+    <link rel="stylesheet" href="<?= base_url('assets/css/tour.css') ?>"/>
     <style>
         :root {
             --sidebar-bg:    <?= esc($_sidebarBg) ?>;
@@ -55,7 +56,15 @@ $_logoUrl     = setting_logo_url();
         }
     </style>
 </head>
-<body>
+<body
+    data-tour-scope="<?= esc((session()->get('company_slug') ?? 'tenant') . ':' . (session()->get('user_id') ?? 0)) ?>"
+    data-tour-company="<?= esc($_companyName) ?>"
+    data-tour-user="<?= esc(session()->get('full_name') ?? '') ?>"
+    data-tour-page="<?= esc(service('request')->getPath()) ?>"
+    data-tour-dashboard-url="<?= esc(site_url('dashboard')) ?>"
+    data-tour-docs-url="<?= esc(platform_setting('docs_url')) ?>"
+    data-tour-support-url="<?= esc(platform_setting('support_url')) ?>"
+>
 
 <!-- ============ SIDEBAR ============ -->
 <nav id="sidebar">
@@ -80,7 +89,7 @@ $_logoUrl     = setting_logo_url();
 
         <p class="nav-section">People</p>
         <?php if (can_do('employees', 'view')): ?>
-        <a class="nav-link" href="<?= site_url('employees') ?>">
+        <a class="nav-link" href="<?= site_url('employees') ?>" data-tour="nav-employees">
             <i class="fa fa-users"></i> Employees
         </a>
         <?php endif; ?>
@@ -130,13 +139,15 @@ $_logoUrl     = setting_logo_url();
         <?php endif; ?>
 
         <?php if (session()->get('role') === 'admin'): ?>
-        <p class="nav-section">System</p>
-        <a class="nav-link" href="<?= site_url('settings') ?>">
-            <i class="fa fa-sliders"></i> Control Panel
-        </a>
-        <a class="nav-link" href="<?= site_url('logs') ?>">
-            <i class="fa fa-list-alt"></i> Audit Logs
-        </a>
+        <div data-tour="advanced-features">
+            <p class="nav-section">System</p>
+            <a class="nav-link" href="<?= site_url('settings') ?>">
+                <i class="fa fa-sliders"></i> Control Panel
+            </a>
+            <a class="nav-link" href="<?= site_url('logs') ?>">
+                <i class="fa fa-list-alt"></i> Audit Logs
+            </a>
+        </div>
         <?php endif; ?>
     </div>
 
@@ -165,7 +176,11 @@ $_logoUrl     = setting_logo_url();
         <div class="user-badge">
             <i class="fa fa-clock text-muted me-1"></i>
             <span class="text-muted small"><?= date('D, M j Y') ?></span>
-            <a href="<?= site_url('logout') ?>" class="btn btn-sm btn-outline-danger ms-3">
+            <button type="button" id="tour-start-btn" class="btn btn-sm btn-outline-primary ms-3"
+                    aria-label="Take an interactive tour of the system" title="Take a Tour">
+                <i class="fa fa-compass me-1"></i>Tour
+            </button>
+            <a href="<?= site_url('logout') ?>" class="btn btn-sm btn-outline-danger ms-2">
                 <i class="fa fa-right-from-bracket me-1"></i>Logout
             </a>
         </div>
@@ -213,6 +228,7 @@ $_logoUrl     = setting_logo_url();
 
 <script src="<?= base_url('assets/js/bootstrap.bundle.min.js') ?>"></script>
 <script src="<?= base_url('assets/js/custom.js') ?>"></script>
+<script src="<?= base_url('assets/js/tour.js') ?>"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     document.querySelectorAll('.flash-container .alert').forEach(function (el) {

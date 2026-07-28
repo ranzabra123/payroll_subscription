@@ -2,7 +2,7 @@
 <?= $this->section('content') ?>
 
 <!-- Stat Cards -->
-<div class="row g-3 mb-4">
+<div class="row g-3 mb-4" data-tour="stat-cards">
     <div class="col-sm-6 col-xl-3">
         <div class="card stat-card p-3">
             <div class="d-flex align-items-center gap-3">
@@ -115,7 +115,7 @@
                         </a>
                     </div>
                     <div class="col-6">
-                        <a href="<?= site_url('employees/create') ?>"
+                        <a href="<?= site_url('employees/create') ?>" data-tour="first-task-add-employee"
                            class="btn btn-outline-success w-100 py-3">
                             <i class="fa fa-user-plus fa-lg d-block mb-1"></i>
                             <small>Add Employee</small>
