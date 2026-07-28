@@ -65,30 +65,54 @@ class ProvisioningService
 
         // Some hosts (typical cPanel shared hosting) never grant the
         // app's own DB user CREATE DATABASE — only the control panel
-        // can create new databases there. If that's the case, fall back
-        // to expecting the superadmin has already created `$dbName`
-        // manually (e.g. cPanel > MySQL Databases) and granted this DB
-        // user full privileges on it, and proceed using that instead of
-        // hard-failing. We only track/drop the database on later
-        // failure if *this request* is the one that created it — a
-        // manually pre-created database is never auto-deleted.
+        // can create new databases there. We only track/drop the
+        // database on later failure if *this request* is the one that
+        // created it — a manually pre-created database, or one created
+        // via the cPanel API below, is never auto-deleted either, since
+        // in both cases the superadmin (or their host account) owns it,
+        // not this specific request.
         $weCreatedDatabase = false;
+        $creationErrors    = [];
 
         try {
             $landlordConn->query('CREATE DATABASE `' . $dbName . '` CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci');
             $weCreatedDatabase = true;
         } catch (Throwable $e) {
-            if (! $this->databaseExists($landlordConn, $dbName)) {
-                throw new ProvisioningException(
-                    "Could not create the tenant database automatically ({$e->getMessage()}). "
-                    . "If your hosting doesn't allow this, create a database named '{$dbName}' "
-                    . 'manually first (e.g. cPanel > MySQL Databases), grant this app\'s database '
-                    . 'user full privileges on it, then submit this form again with the same company code.',
-                );
+            $creationErrors[] = $e->getMessage();
+
+            // Fallback 1: cPanel's API can create databases + grant
+            // privileges using the hosting account's own access, even
+            // when the MySQL user itself has no CREATE DATABASE
+            // privilege — this is how cPanel's "MySQL Databases" page
+            // works internally. Only attempted if configured (see
+            // Config\Cpanel); silently skipped otherwise.
+            $cpanel = new CpanelApiService();
+
+            if ($cpanel->isConfigured()) {
+                try {
+                    $prefix     = config(Database::class)->tenantDbPrefix;
+                    $userSuffix = $this->stripPrefix($landlordDbConfig['username'], $prefix);
+
+                    $cpanel->createDatabase($slug);
+                    $cpanel->grantAllPrivileges($slug, $userSuffix);
+                    $weCreatedDatabase = true;
+                } catch (Throwable $apiException) {
+                    $creationErrors[] = $apiException->getMessage();
+                }
             }
-            // else: database already exists and this DB user can see it
-            // (i.e. was pre-created + granted) — proceed as if we'd just
-            // created it.
+        }
+
+        // Fallback 2: the superadmin already created `$dbName` manually
+        // (e.g. cPanel > MySQL Databases) and granted this DB user full
+        // privileges on it — proceed using that instead of hard-failing.
+        if (! $weCreatedDatabase && ! $this->databaseExists($landlordConn, $dbName)) {
+            throw new ProvisioningException(
+                'Could not create the tenant database automatically ('
+                . implode('; ', $creationErrors)
+                . "). If your hosting doesn't allow this, create a database named '{$dbName}' "
+                . 'manually first (e.g. cPanel > MySQL Databases), grant this app\'s database '
+                . 'user full privileges on it, then submit this form again with the same company code.',
+            );
         }
 
         try {
@@ -182,6 +206,12 @@ class ProvisioningService
         }
 
         return $companyModel->find($companyId);
+    }
+
+    /** Strips a leading account prefix (e.g. "mrcyjkmp_somar" -> "somar"), if present. */
+    private function stripPrefix(string $value, string $prefix): string
+    {
+        return $prefix !== '' && str_starts_with($value, $prefix) ? substr($value, strlen($prefix)) : $value;
     }
 
     private function dropDatabase($landlordConn, string $dbName): void
