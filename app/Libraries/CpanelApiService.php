@@ -38,24 +38,28 @@ class CpanelApiService
     }
 
     /**
-     * Creates a database via cPanel. Pass the bare suffix — no account
-     * prefix — cPanel prepends it automatically (the same way its own
-     * "MySQL Databases" page works), matching Config\Database::$tenantDbPrefix.
+     * Creates a database via cPanel. Pass the FULL name including the
+     * account prefix (e.g. "mrcyjkmp_the_boundary_cafe") — verified
+     * empirically against a real cPanel install: unlike some cPanel
+     * documentation examples, this UAPI does NOT auto-prepend the
+     * account prefix and rejects names that don't already start with
+     * it ("does not begin with the required prefix").
      */
-    public function createDatabase(string $dbNameSuffix): void
+    public function createDatabase(string $fullDbName): void
     {
-        $this->call('Mysql', 'create_database', ['name' => $dbNameSuffix]);
+        $this->call('Mysql', 'create_database', ['name' => $fullDbName]);
     }
 
     /**
      * Grants a DB user ALL PRIVILEGES on a database. Both arguments are
-     * bare suffixes (no account prefix), same reasoning as above.
+     * FULL names including the account prefix, same reasoning as above
+     * — a bare username suffix fails here too.
      */
-    public function grantAllPrivileges(string $dbNameSuffix, string $dbUserSuffix): void
+    public function grantAllPrivileges(string $fullDbName, string $fullDbUser): void
     {
         $this->call('Mysql', 'set_privileges_on_database', [
-            'user'       => $dbUserSuffix,
-            'database'   => $dbNameSuffix,
+            'user'       => $fullDbUser,
+            'database'   => $fullDbName,
             'privileges' => 'ALL PRIVILEGES',
         ]);
     }

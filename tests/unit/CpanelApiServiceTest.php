@@ -29,9 +29,9 @@ final class CpanelApiServiceTest extends CIUnitTestCase
     {
         $service = new TestableCpanelApiService('1.2.3.4', 2083, 'mrcyjkmp', 'secret-token');
 
-        $url = $service->publicBuildUrl('Mysql', 'create_database', ['name' => 'the_boundary_cafe']);
+        $url = $service->publicBuildUrl('Mysql', 'create_database', ['name' => 'mrcyjkmp_the_boundary_cafe']);
 
-        $this->assertSame('https://1.2.3.4:2083/execute/Mysql/create_database?name=the_boundary_cafe', $url);
+        $this->assertSame('https://1.2.3.4:2083/execute/Mysql/create_database?name=mrcyjkmp_the_boundary_cafe', $url);
         $this->assertStringNotContainsString('secret-token', $url);
     }
 

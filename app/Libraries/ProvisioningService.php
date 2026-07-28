@@ -90,11 +90,10 @@ class ProvisioningService
 
             if ($cpanel->isConfigured()) {
                 try {
-                    $prefix     = config(Database::class)->tenantDbPrefix;
-                    $userSuffix = $this->stripPrefix($landlordDbConfig['username'], $prefix);
-
-                    $cpanel->createDatabase($slug);
-                    $cpanel->grantAllPrivileges($slug, $userSuffix);
+                    // Both names must include the full account prefix —
+                    // see CpanelApiService::createDatabase() docblock.
+                    $cpanel->createDatabase($dbName);
+                    $cpanel->grantAllPrivileges($dbName, $landlordDbConfig['username']);
                     $weCreatedDatabase = true;
                 } catch (Throwable $apiException) {
                     $creationErrors[] = $apiException->getMessage();
@@ -206,12 +205,6 @@ class ProvisioningService
         }
 
         return $companyModel->find($companyId);
-    }
-
-    /** Strips a leading account prefix (e.g. "mrcyjkmp_somar" -> "somar"), if present. */
-    private function stripPrefix(string $value, string $prefix): string
-    {
-        return $prefix !== '' && str_starts_with($value, $prefix) ? substr($value, strlen($prefix)) : $value;
     }
 
     private function dropDatabase($landlordConn, string $dbName): void
