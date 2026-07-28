@@ -58,4 +58,22 @@ class ChangePasswordController extends Controller
 
         return redirect()->to(site_url('dashboard'))->with('success', 'Password updated. Welcome!');
     }
+
+    /**
+     * Lets the user defer the password change to later, for this login
+     * session only. Does NOT clear `users.must_change_password` in the
+     * database — only a session-level flag — so they'll be prompted
+     * again on their next login until they actually change it.
+     */
+    public function skip()
+    {
+        session()->set('must_change_password_skipped', true);
+
+        $username = session()->get('username') ?? 'unknown';
+        (new AuditLogModel())->logAction('Auth', 'change_password_skipped', session()->get('user_id'), null, null,
+            "User '{$username}' deferred the required password change");
+
+        return redirect()->to(site_url('dashboard'))
+            ->with('alert', "Don't forget to set your own password — you'll be reminded again next time you log in.");
+    }
 }

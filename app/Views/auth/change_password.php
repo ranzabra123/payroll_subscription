@@ -9,7 +9,7 @@
             </div>
             <div>
                 <h3 class="fw-bold mb-0">Set Your Password</h3>
-                <p class="mb-0 opacity-75 small">Required before you can continue</p>
+                <p class="mb-0 opacity-75 small">Recommended before you continue</p>
             </div>
         </div>
     </div>
@@ -45,6 +45,10 @@
                 <i class="fa fa-check me-2"></i>Set Password &amp; Continue
             </button>
         </form>
+
+        <a href="<?= site_url('change-password/skip') ?>" class="btn btn-outline-secondary w-100 py-2 mt-2">
+            <i class="fa fa-clock me-2"></i>Do This Later
+        </a>
 
         <div class="text-center mt-3">
             <a href="<?= site_url('logout') ?>" class="text-muted small">

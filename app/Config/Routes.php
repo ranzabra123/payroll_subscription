@@ -61,8 +61,9 @@ $routes->group('', ['filter' => ['auth', 'forcepasswordchange']], static functio
     $routes->get('subscription/expired', 'SubscriptionController::expired');
 
     // ---- Forced password change (reachable even when otherwise blocked) ----
-    $routes->get('change-password',  'ChangePasswordController::index');
-    $routes->post('change-password', 'ChangePasswordController::update');
+    $routes->get('change-password',       'ChangePasswordController::index');
+    $routes->post('change-password',      'ChangePasswordController::update');
+    $routes->get('change-password/skip',  'ChangePasswordController::skip');
 
     // ---- Users (admin only) ----
     $routes->get('users',                   'UsersController::index');

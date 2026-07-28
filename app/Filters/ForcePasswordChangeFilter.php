@@ -14,14 +14,18 @@ use CodeIgniter\HTTP\ResponseInterface;
  * TenantResolverFilter for subscription gating, including using
  * getPath() (not getUri()->getPath()) so it works correctly whether the
  * app is served from a subfolder or a vhost root.
+ *
+ * The user can defer this via ChangePasswordController::skip(), which
+ * sets `must_change_password_skipped` in session only (the DB flag is
+ * untouched, so they're prompted again on their next fresh login).
  */
 class ForcePasswordChangeFilter implements FilterInterface
 {
-    private const ALLOWED_PATHS = ['change-password', 'logout'];
+    private const ALLOWED_PATHS = ['change-password', 'change-password/skip', 'logout'];
 
     public function before(RequestInterface $request, $arguments = null): mixed
     {
-        if (! session()->get('must_change_password')) {
+        if (! session()->get('must_change_password') || session()->get('must_change_password_skipped')) {
             return null;
         }
 
