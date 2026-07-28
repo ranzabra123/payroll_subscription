@@ -139,7 +139,29 @@ class ProvisioningService
             }
 
             $userModel = new UserModel($tenantConn);
-            $adminId   = $userModel->insert([
+
+            // UserModel's own `is_unique[users.username,...]` validation
+            // rule resolves its DB connection by group *name* (via
+            // $this->DBGroup, which is null here since UserModel is
+            // deliberately tenant-agnostic — see UserModel's docblock and
+            // the identical footgun documented in
+            // CompaniesController::resetCredentials()), not by the
+            // connection object injected into the constructor. Left
+            // unguarded, it silently validates against whatever `default`
+            // happens to be instead of $tenantConn — harmless-looking in
+            // local dev where `default` is usually some other reachable
+            // database, but a hard failure in production where `default`
+            // is deliberately left unconfigured. A brand-new tenant DB's
+            // `users` table is always empty at this point, but check
+            // properly (against the real tenant connection) rather than
+            // skip it, and skip the model's own broken check.
+            $duplicate = $tenantConn->table('users')->where('username', $adminUsername)->countAllResults();
+
+            if ($duplicate > 0) {
+                throw new ProvisioningException("Username '{$adminUsername}' is already taken in the new tenant database.");
+            }
+
+            $adminId = $userModel->skipValidation(true)->insert([
                 'username'              => $adminUsername,
                 'password'              => $adminPassword,
                 'full_name'             => $adminFullName,

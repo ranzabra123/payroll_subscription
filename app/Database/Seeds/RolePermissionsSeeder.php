@@ -2,10 +2,31 @@
 
 namespace App\Database\Seeds;
 
+use CodeIgniter\Database\BaseConnection;
 use CodeIgniter\Database\Seeder;
+use Config\Database;
 
 class RolePermissionsSeeder extends Seeder
 {
+    /**
+     * CI4's own Seeder::__construct() always builds $this->forge from
+     * Database::forge($this->DBGroup) — using the group *name* (null
+     * here, since this seeder is deliberately tenant-agnostic), not the
+     * $db connection actually passed in. That eagerly opens a real
+     * connection to the `default` group just to build a Forge instance
+     * this seeder never uses (run() only ever touches $this->db) —
+     * harmless in local dev where `default` usually happens to be some
+     * other reachable database, but a hard crash in production where
+     * `default` is intentionally left unconfigured. Overridden here to
+     * skip that unused, unsafe eager connection entirely.
+     */
+    public function __construct(Database $config, ?BaseConnection $db = null)
+    {
+        $this->seedPath = rtrim($config->filesPath ?? APPPATH . 'Database/', '\\/') . '/Seeds/';
+        $this->config   = &$config;
+        $this->db       = $db ?? Database::connect($this->DBGroup);
+    }
+
     public function run()
     {
         $defaults = [
