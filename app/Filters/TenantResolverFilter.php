@@ -63,6 +63,13 @@ class TenantResolverFilter implements FilterInterface
             return null;
         }
 
+        // Kept fresh every request (not just at login) so a superadmin
+        // changing the plan takes effect immediately for plan-limit
+        // checks (see SubscriptionPlans / EmployeesController::store() /
+        // SettingsController::addBranch()), same reasoning as the status/
+        // expiry re-fetch above.
+        session()->set('subscription_plan', $company['subscription_plan']);
+
         $company['db_password'] = CredentialCipher::decrypt($company['db_password']);
         TenantConnectionResolver::applyToDefaultGroup($company);
 

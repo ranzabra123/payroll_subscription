@@ -8,6 +8,7 @@ use App\Models\SalaryHistoryModel;
 use App\Models\AttendanceModel;
 use App\Models\AuditLogModel;
 use App\Models\BenefitModel;
+use App\Libraries\SubscriptionPlans;
 
 /**
  * EmployeesController – full CRUD for employee records.
@@ -77,6 +78,13 @@ class EmployeesController extends Controller
 
         if (! $this->validate($rules)) {
             return redirect()->back()->with('errors', $this->validator->getErrors())->withInput();
+        }
+
+        $plan         = session()->get('subscription_plan');
+        $maxEmployees = SubscriptionPlans::maxEmployees($plan);
+        if ($maxEmployees !== null && $this->model->countAllResults() >= $maxEmployees) {
+            return redirect()->back()->withInput()->with('error',
+                "You've reached the " . SubscriptionPlans::label($plan) . " plan limit of {$maxEmployees} employees. Upgrade your plan to add more.");
         }
 
         $monthly    = (float) $this->request->getPost('monthly_salary');

@@ -8,6 +8,7 @@ use App\Models\DepartmentModel;
 use App\Models\BranchModel;
 use App\Models\AuditLogModel;
 use App\Models\RolePermissionModel;
+use App\Libraries\SubscriptionPlans;
 
 class SettingsController extends Controller
 {
@@ -330,6 +331,13 @@ class SettingsController extends Controller
         if ($exists) {
             return redirect()->to(site_url('settings') . '#branches')
                 ->with('error', "Branch '{$name}' already exists.");
+        }
+
+        $plan       = session()->get('subscription_plan');
+        $maxBranches = SubscriptionPlans::maxBranches($plan);
+        if ($maxBranches !== null && $this->branchModel->countAllResults() >= $maxBranches) {
+            return redirect()->to(site_url('settings') . '#branches')->with('error',
+                "You've reached the " . SubscriptionPlans::label($plan) . " plan limit of {$maxBranches} branch" . ($maxBranches === 1 ? '' : 'es') . ". Upgrade your plan to add more.");
         }
 
         $newBranchId = $this->branchModel->insert(['name' => $name, 'address' => $address, 'is_active' => 1]);

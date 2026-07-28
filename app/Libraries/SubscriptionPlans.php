@@ -3,11 +3,10 @@
 namespace App\Libraries;
 
 /**
- * The fixed set of subscription tiers a company can be assigned. These
- * are plan *definitions* (limits shown for reference/selection) — actual
- * enforcement of the employee/branch caps against a tenant's live data
- * is not implemented here; this only drives what superadmin sees and
- * assigns when creating/upgrading a company.
+ * The fixed set of subscription tiers a company can be assigned. Plan
+ * *definitions* live here; enforcement of the employee/branch caps
+ * against a tenant's live data happens at the point of creation — see
+ * EmployeesController::store() and SettingsController::addBranch().
  */
 class SubscriptionPlans
 {
@@ -58,5 +57,17 @@ class SubscriptionPlans
             return 'Unlimited';
         }
         return $max === 1 ? '1 Branch' : "Up to {$max} Branches";
+    }
+
+    /** Raw employee cap for a plan, or null if unlimited/plan unknown. */
+    public static function maxEmployees(?string $key): ?int
+    {
+        return self::PLANS[$key]['max_employees'] ?? null;
+    }
+
+    /** Raw branch cap for a plan, or null if unlimited/plan unknown. */
+    public static function maxBranches(?string $key): ?int
+    {
+        return self::PLANS[$key]['max_branches'] ?? null;
     }
 }
